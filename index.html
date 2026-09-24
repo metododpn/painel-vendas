@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Painel de vendas — DuoDPN</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.6.0/dist/tabler-icons.min.css">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+:root {
+  --green: #58CC02;
+  --green-dark: #46A302;
+  --orange: #FF9600;
+  --blue: #1CB0F6;
+  --purple: #CE82FF;
+  --red: #FF4B4B;
+  --indigo: #5C6AFF;
+  --gold: #FFD700;
+  --bg: #FAFAFA;
+  --card: #FFFFFF;
+  --border: #E8E8E8;
+  --text: #3C3C3C;
+  --text2: #777777;
+  --radius: 12px;
+  --radius-sm: 8px;
+}
+* { box-sizing: border-box; margin: 0; padding: 0; }
+body { font-family: 'Inter', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+/* Login */
+.login-page { display: flex; align-items: center; justify-content: center; min-height: 100vh; }
+.login-box { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 2.5rem; width: 380px; text-align: center; }
+.login-box .logo { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 22px; color: var(--green); margin-bottom: 6px; }
+.login-box .sub { font-size: 13px; color: var(--text2); margin-bottom: 1.5rem; }
+.login-box input { width: 100%; padding: 10px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; font-family: 'Inter', sans-serif; margin-bottom: 12px; outline: none; transition: border 0.2s; }
+.login-box input:focus { border-color: var(--green); }
+.login-box .btn { width: 100%; padding: 11px; border: none; background: var(--green); color: white; font-size: 14px; font-weight: 600; font-family: 'Inter', sans-serif; border-radius: var(--radius-sm); cursor: pointer; transition: background 0.2s; }
+.login-box .btn:hover { background: var(--green-dark); }
+.login-box .err { font-size: 13px; color: var(--red); margin-bottom: 10px; min-height: 20px; }
+
+/* Dashboard */
+.dash { display: none; max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+.top-bar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 1.5rem; }
+.top-bar h1 { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 20px; color: var(--green); display: flex; align-items: center; gap: 8px; }
+.top-right { display: flex; align-items: center; gap: 14px; }
+.top-right .time { font-size: 12px; color: var(--text2); }
+.logout { font-size: 12px; color: var(--text2); background: none; border: 1px solid var(--border); border-radius: var(--radius-sm); padding: 5px 12px; cursor: pointer; font-family: 'Inter', sans-serif; }
+.logout:hover { background: #f0f0f0; }
+
+.metrics { display: grid; grid-template-columns: repeat(5, 1fr); gap: 10px; margin-bottom: 1.5rem; }
+@media(max-width: 700px) { .metrics { grid-template-columns: repeat(2, 1fr); } }
+.metric { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1rem 1.1rem; }
+.metric .lab { font-size: 11px; color: var(--text2); text-transform: uppercase; letter-spacing: 0.03em; margin-bottom: 6px; }
+.metric .val { font-family: 'Nunito', sans-serif; font-weight: 800; font-size: 22px; }
+.metric .hint { font-size: 11px; color: var(--text2); margin-top: 3px; }
+.metric.m-green .val { color: var(--green-dark); }
+.metric.m-orange .val { color: #B87600; }
+.metric.m-red .val { color: var(--red); }
+
+.chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 1.5rem; }
+@media(max-width: 600px) { .chart-row { grid-template-columns: 1fr; } }
+.card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 1.25rem; }
+.card-title { font-size: 11px; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text2); font-weight: 500; margin-bottom: 12px; }
+
+.list-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.list-header .card-title { margin-bottom: 0; }
+.add-btn { font-size: 13px; padding: 6px 14px; border: 1px solid var(--border); border-radius: var(--radius-sm); background: var(--card); cursor: pointer; font-family: 'Inter', sans-serif; color: var(--text); display: flex; align-items: center; gap: 4px; }
+.add-btn:hover { background: #f5f5f5; }
+
+.filters { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.filters select, .filters input { font-size: 13px; padding: 7px 10px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-family: 'Inter', sans-serif; background: var(--card); color: var(--text); outline: none; }
+.filters select:focus, .filters input:focus { border-color: var(--green); }
+.filters input[type=text] { flex: 1; min-width: 180px; }
+
+.table-wrap { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+th { font-size: 10px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: var(--text2); text-align: left; padding: 10px 14px; background: #f8f8f8; border-bottom: 1px solid var(--border); }
+td { padding: 10px 14px; border-bottom: 1px solid #f0f0f0; }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: #fafdf6; }
+.badge { display: inline-block; font-size: 11px; padding: 3px 10px; border-radius: 20px; font-weight: 600; }
+.b-paid { background: #E8FAD8; color: #3B6D11; }
+.b-pending { background: #FFF3D6; color: #8B6914; }
+.b-refunded { background: #FFE8E8; color: #A32D2D; }
+.b-course { background: #E0F2FE; color: #0F5FA5; }
+.b-renewal { background: #EDE9FE; color: #5B3FA5; }
+.b-unknown { background: #f0f0f0; color: #777; }
+.b-active { background: #E8FAD8; color: #3B6D11; }
+.b-expiring { background: #FFF3D6; color: #8B6914; }
+.b-expired { background: #FFE8E8; color: #A32D2D; }
+.empty { text-align: center; padding: 2.5rem; color: var(--text2); font-size: 14px; }
+
+/* Modal */
+.modal-bg { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.35); z-index: 100; align-items: center; justify-content: center; }
+.modal-bg.open { display: flex; }
+.modal { background: var(--card); border-radius: var(--radius); padding: 1.75rem; width: 480px; max-width: 95vw; border: 1px solid var(--border); }
+.modal h3 { font-family: 'Nunito', sans-serif; font-weight: 700; font-size: 16px; margin-bottom: 1rem; }
+.fg { margin-bottom: 12px; }
+.fg label { display: block; font-size: 11px; color: var(--text2); margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.03em; }
+.fg input, .fg select { width: 100%; padding: 8px 12px; border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 13px; font-family: 'Inter', sans-serif; outline: none; }
+.fg input:focus, .fg select:focus { border-color: var(--green); }
+.fr { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.modal-foot { display: flex; gap: 8px; justify-content: flex-end; margin-top: 1.25rem; }
+.btn-save { padding: 9px 20px; background: var(--green); color: white; border: none; border-radius: var(--radius-sm); font-size: 14px; font-weight: 600; cursor: pointer; font-family: 'Inter', sans-serif; }
+.btn-save:hover { background: var(--green-dark); }
+.btn-cancel { padding: 9px 20px; background: #f5f5f5; color: var(--text2); border: 1px solid var(--border); border-radius: var(--radius-sm); font-size: 14px; cursor: pointer; font-family: 'Inter', sans-serif; }
+</style>
+</head>
+<body>
+
+<div class="login-page" id="loginPage">
+  <div class="login-box">
+    <div class="logo">DuoDPN</div>
+    <div class="sub">Painel de vendas</div>
+    <div class="err" id="loginErr"></div>
+    <input type="password" id="tokenInput" placeholder="Senha do painel" onkeydown="if(event.key==='Enter')doLogin()">
+    <button class="btn" onclick="doLogin()">Entrar</button>
+  </div>
+</div>
+
+<div class="dash" id="dash">
+  <div class="top-bar">
+    <h1><i class="ti ti-chart-bar"></i> Painel de vendas</h1>
+    <div class="top-right">
+      <span class="time" id="updatedAt"></span>
+      <button class="logout" onclick="doLogout()"><i class="ti ti-logout" style="font-size:13px;vertical-align:-1px;margin-right:3px;"></i>Sair</button>
+    </div>
+  </div>
+
+  <div class="metrics" id="metricsArea"></div>
+
+  <div class="chart-row">
+    <div class="card">
+      <div class="card-title">Receita por mês</div>
+      <div style="position:relative;height:200px;"><canvas id="cRevenue"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="card-title">Vendas por tipo</div>
+      <div style="position:relative;height:200px;"><canvas id="cType"></canvas></div>
+    </div>
+  </div>
+
+  <div class="list-header">
+    <div class="card-title">Todas as vendas</div>
+    <button class="add-btn" onclick="openModal()"><i class="ti ti-plus" style="font-size:14px;"></i> Adicionar venda</button>
+  </div>
+
+  <div class="filters">
+    <select id="fStatus" onchange="renderTable()">
+      <option value="">Todos os status</option>
+      <option value="paid">Pago</option>
+      <option value="pending">Pendente</option>
+      <option value="refunded">Reembolsado</option>
+    </select>
+    <select id="fType" onchange="renderTable()">
+      <option value="">Todos os tipos</option>
+      <option value="course">Curso</option>
+      <option value="renewal">Anuidade</option>
+      <option value="unknown">Sem classificação</option>
+    </select>
+    <select id="fAccess" onchange="renderTable()">
+      <option value="">Todos os acessos</option>
+      <option value="active">Ativo</option>
+      <option value="expiring">Vence em 30 dias</option>
+      <option value="expired">Expirado</option>
+    </select>
+    <input type="text" id="fSearch" placeholder="Buscar por email ou nome..." oninput="renderTable()">
+  </div>
+
+  <div class="table-wrap">
+    <div id="tableArea"><div class="empty">Carregando...</div></div>
+  </div>
+</div>
+
+<div class="modal-bg" id="modal">
+  <div class="modal">
+    <h3>Nova venda</h3>
+    <div class="fr">
+      <div class="fg"><label>Email</label><input type="email" id="mEmail" placeholder="cliente@email.com"></div>
+      <div class="fg"><label>Nome</label><input type="text" id="mName" placeholder="Nome completo"></div>
+    </div>
+    <div class="fr">
+      <div class="fg">
+        <label>Tipo de produto</label>
+        <select id="mType" onchange="syncAmt()">
+          <option value="course">Curso (R$ 197)</option>
+          <option value="renewal">Anuidade (R$ 97)</option>
+          <option value="unknown">Sem classificação</option>
+        </select>
+      </div>
+      <div class="fg"><label>Valor (R$)</label><input type="number" id="mAmt" step="0.01" value="197.00"></div>
+    </div>
+    <div class="fr">
+      <div class="fg">
+        <label>Status</label>
+        <select id="mStatus"><option value="paid">Pago</option><option value="pending">Pendente</option></select>
+      </div>
+      <div class="fg">
+        <label>Pagamento</label>
+        <select id="mPay"><option value="pix">Pix</option><option value="credit_card">Cartão</option><option value="boleto">Boleto</option></select>
+      </div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>Data da venda</label><input type="date" id="mDate"></div>
+      <div class="fg"><label>Fim do acesso</label><input type="date" id="mEnd"></div>
+    </div>
+    <div class="fg"><label>Order ID (Kiwify)</label><input type="text" id="mOrder" placeholder="Opcional"></div>
+    <div class="modal-foot">
+      <button class="btn-cancel" onclick="closeModal()">Cancelar</button>
+      <button class="btn-save" onclick="saveSale()">Salvar venda</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const FN = 'https://trhsqkffacuxytceornq.supabase.co/functions/v1/sales-dashboard';
+let TK = '';
+let sales = [];
+let ch1 = null, ch2 = null;
+
+async function api(opts = {}) {
+  const r = await fetch(FN + (opts.qs || ''), {
+    method: opts.method || 'GET',
+    headers: { 'x-dashboard-token': TK, 'Content-Type': 'application/json' },
+    body: opts.body ? JSON.stringify(opts.body) : undefined
+  });
+  if (r.status === 401) throw new Error('Unauthorized');
+  if (!r.ok) { const e = await r.json(); throw new Error(e.error || r.status); }
+  return r.json();
+}
+
+async function doLogin() {
+  const t = document.getElementById('tokenInput').value;
+  if (!t) { document.getElementById('loginErr').textContent = 'Digite a senha.'; return; }
+  TK = t;
+  try {
+    await loadData();
+    document.getElementById('loginPage').style.display = 'none';
+    document.getElementById('dash').style.display = 'block';
+  } catch(e) {
+    TK = '';
+    document.getElementById('loginErr').textContent = 'Senha incorreta.';
+  }
+}
+
+function doLogout() {
+  TK = ''; sales = [];
+  document.getElementById('dash').style.display = 'none';
+  document.getElementById('loginPage').style.display = 'flex';
+  document.getElementById('tokenInput').value = '';
+  document.getElementById('loginErr').textContent = '';
+}
+
+function fmt(c) { return 'R$ ' + (c/100).toLocaleString('pt-BR', {minimumFractionDigits:2, maximumFractionDigits:2}); }
+function fmtD(iso) { return iso ? new Date(iso).toLocaleDateString('pt-BR') : '—'; }
+function accSt(s) {
+  if (!s.access_end_date) return 'none';
+  const d = Math.ceil((new Date(s.access_end_date) - new Date()) / 86400000);
+  return d < 0 ? 'expired' : d <= 30 ? 'expiring' : 'active';
+}
+function accBadge(s) {
+  if (!s.access_end_date) return '—';
+  const st = accSt(s), e = fmtD(s.access_end_date);
+  if (st === 'expired') return `<span class="badge b-expired">Expirado ${e}</span>`;
+  if (st === 'expiring') return `<span class="badge b-expiring">Vence ${e}</span>`;
+  return `<span class="badge b-active">${e}</span>`;
+}
+
+function renderMetrics() {
+  const p = sales.filter(s => s.status === 'paid');
+  const rev = p.reduce((a,s) => a + (s.net_amount_cents || s.amount_cents || 0), 0);
+  const exp = sales.filter(s => s.expiring_soon && s.status === 'paid').length;
+  const dead = sales.filter(s => accSt(s) === 'expired' && s.status === 'paid').length;
+  const nc = p.filter(s => s.product_type === 'course').length;
+  const nr = p.filter(s => s.product_type === 'renewal').length;
+  document.getElementById('metricsArea').innerHTML = `
+    <div class="metric m-green"><div class="lab">Receita líquida</div><div class="val">${fmt(rev)}</div><div class="hint">${p.length} vendas pagas</div></div>
+    <div class="metric"><div class="lab">Cursos vendidos</div><div class="val">${nc}</div><div class="hint">R$ 197 cada</div></div>
+    <div class="metric"><div class="lab">Anuidades</div><div class="val">${nr}</div><div class="hint">R$ 97 cada</div></div>
+    <div class="metric m-orange"><div class="lab">Vencendo em 30d</div><div class="val">${exp}</div><div class="hint">renovação</div></div>
+    <div class="metric m-red"><div class="lab">Expirados</div><div class="val">${dead}</div><div class="hint">sem renovação</div></div>
+  `;
+}
+
+function renderCharts() {
+  const p = sales.filter(s => s.status === 'paid');
+  const mm = {};
+  p.forEach(s => {
+    const d = new Date(s.sale_date);
+    const k = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}`;
+    mm[k] = (mm[k]||0) + (s.net_amount_cents || s.amount_cents || 0);
+  });
+  const ms = Object.keys(mm).sort().slice(-6);
+  const ml = ms.map(m => { const [y,mo]=m.split('-'); return new Date(y,mo-1,1).toLocaleDateString('pt-BR',{month:'short',year:'2-digit'}); });
+  const mv = ms.map(m => Math.round(mm[m]/100));
+
+  if (ch1) ch1.destroy();
+  ch1 = new Chart(document.getElementById('cRevenue'), {
+    type: 'bar',
+    data: { labels: ml.length?ml:['Sem dados'], datasets: [{ data: mv.length?mv:[0], backgroundColor: '#58CC02', borderRadius: 6 }] },
+    options: { responsive:true, maintainAspectRatio:false, plugins:{legend:{display:false}},
+      scales:{ y:{ticks:{callback:v=>'R$'+v,font:{size:11}},grid:{color:'rgba(0,0,0,0.05)'}}, x:{ticks:{font:{size:11}},grid:{display:false}} } }
+  });
+
+  const tc = [['Curso',p.filter(s=>s.product_type==='course').length],['Anuidade',p.filter(s=>s.product_type==='renewal').length],['Outros',p.filter(s=>s.product_type==='unknown').length]].filter(([,v])=>v>0);
+  if (ch2) ch2.destroy();
+  if (!tc.length) tc.push(['Sem dados', 1]);
+  ch2 = new Chart(document.getElementById('cType'), {
+    type: 'doughnut',
+    data: { labels: tc.map(([k])=>k), datasets: [{ data: tc.map(([,v])=>v), backgroundColor: ['#1CB0F6','#CE82FF','#ccc'], borderWidth: 0 }] },
+    options: { responsive:true, maintainAspectRatio:false, cutout:'60%',
+      plugins:{ legend:{ position:'bottom', labels:{font:{size:11},boxWidth:10,padding:14} } } }
+  });
+}
+
+function getFiltered() {
+  const st = document.getElementById('fStatus').value;
+  const tp = document.getElementById('fType').value;
+  const ac = document.getElementById('fAccess').value;
+  const q = document.getElementById('fSearch').value.toLowerCase();
+  return sales.filter(s => {
+    if (st && s.status !== st) return false;
+    if (tp && s.product_type !== tp) return false;
+    if (ac && accSt(s) !== ac) return false;
+    if (q && !(s.email||'').toLowerCase().includes(q) && !(s.customer_name||'').toLowerCase().includes(q)) return false;
+    return true;
+  });
+}
+
+function renderTable() {
+  const f = getFiltered();
+  const a = document.getElementById('tableArea');
+  if (!f.length) { a.innerHTML = '<div class="empty">Nenhuma venda encontrada</div>'; return; }
+  const tl = {course:'Curso',renewal:'Anuidade',unknown:'Sem tipo'};
+  const sl = {paid:'Pago',pending:'Pendente',refunded:'Reembolsado',chargeback:'Chargeback',cancelled:'Cancelado'};
+  a.innerHTML = `<table>
+    <thead><tr><th>Email</th><th>Nome</th><th>Tipo</th><th>Valor</th><th>Status</th><th>Data</th><th>Acesso</th></tr></thead>
+    <tbody>${f.map(s=>`<tr>
+      <td>${s.email||'—'}</td>
+      <td>${s.customer_name||'—'}</td>
+      <td><span class="badge b-${s.product_type}">${tl[s.product_type]||s.product_type}</span></td>
+      <td>${s.amount_cents?fmt(s.amount_cents):'—'}</td>
+      <td><span class="badge b-${s.status}">${sl[s.status]||s.status}</span></td>
+      <td>${fmtD(s.sale_date)}</td>
+      <td>${accBadge(s)}</td>
+    </tr>`).join('')}</tbody></table>`;
+}
+
+function syncAmt() {
+  const t = document.getElementById('mType').value;
+  document.getElementById('mAmt').value = t === 'renewal' ? '97.00' : t === 'course' ? '197.00' : '';
+}
+
+function openModal() {
+  const today = new Date().toISOString().split('T')[0];
+  const next = new Date(Date.now()+365*86400000).toISOString().split('T')[0];
+  document.getElementById('mDate').value = today;
+  document.getElementById('mEnd').value = next;
+  document.getElementById('mType').value = 'course';
+  document.getElementById('mEmail').value = '';
+  document.getElementById('mName').value = '';
+  document.getElementById('mOrder').value = '';
+  syncAmt();
+  document.getElementById('modal').classList.add('open');
+}
+function closeModal() { document.getElementById('modal').classList.remove('open'); }
+
+async function saveSale() {
+  const email = document.getElementById('mEmail').value.trim();
+  if (!email) { alert('Email obrigatório'); return; }
+  const type = document.getElementById('mType').value;
+  const amt = parseFloat(document.getElementById('mAmt').value) || 0;
+  const status = document.getElementById('mStatus').value;
+  const date = document.getElementById('mDate').value;
+  const end = document.getElementById('mEnd').value;
+  const order = document.getElementById('mOrder').value.trim();
+  const body = {
+    email,
+    customer_name: document.getElementById('mName').value.trim() || null,
+    product_type: type,
+    product_name: type==='course'?'Método DPN':type==='renewal'?'Anuidade DuoDPN':null,
+    amount_cents: Math.round(amt*100),
+    net_amount_cents: Math.round(amt*100),
+    status,
+    payment_method: document.getElementById('mPay').value,
+    sale_date: date ? new Date(date).toISOString() : new Date().toISOString(),
+    access_start_date: status==='paid'?(date?new Date(date).toISOString():new Date().toISOString()):null,
+    access_end_date: end ? new Date(end).toISOString() : null,
+    approved_date: status==='paid'?new Date().toISOString():null,
+    order_id: order || null,
+  };
+  try {
+    await api({ method:'POST', qs:'?action=insert', body });
+    closeModal();
+    await loadData();
+  } catch(e) { alert('Erro: ' + e.message); }
+}
+
+async function loadData() {
+  sales = await api();
+  document.getElementById('updatedAt').textContent = 'Atualizado ' + new Date().toLocaleTimeString('pt-BR',{hour:'2-digit',minute:'2-digit'});
+  renderMetrics();
+  renderCharts();
+  renderTable();
+}
+</script>
+</body>
+</html>
